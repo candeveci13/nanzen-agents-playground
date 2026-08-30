@@ -13,6 +13,9 @@ instead of folding it into a total.
 
 from __future__ import annotations
 
+import csv
+import io
+
 from smolagents import Tool
 
 from challenge.tools.csv_reader import read_csv_source
@@ -98,9 +101,12 @@ class BillingReconciliationTool(Tool):
         "Use this instead of manually summing rows from read_context('billing') — "
         "the raw log can contain more than one invoice_issued row per invoice and "
         "represents credit notes in multiple places, so summing raw amounts "
-        "overcounts. Returns invoice_count, total_invoiced, total_paid, "
-        "outstanding_balance, and a list of anomalies worth mentioning in a report "
-        "(reissued invoices, credit notes, and material undocumented adjustments)."
+        "overcounts. Returns CSV with a 'field,value' row per summary field "
+        "(account_id, invoice_count, total_invoiced, total_paid, "
+        "outstanding_balance) plus one 'anomaly,<text>' row per anomaly worth "
+        "mentioning in a report (reissued invoices, credit notes, material "
+        "undocumented adjustments). Parse with Python's csv module, not by "
+        "splitting on commas or indexing into the string."
     )
     inputs = {
         "account_id": {
@@ -112,16 +118,14 @@ class BillingReconciliationTool(Tool):
 
     def forward(self, account_id: str) -> str:
         result = reconcile_billing(account_id)
-        lines = [
-            f"Reconciled billing for {result['account_id']}:",
-            f"  Invoice count: {result['invoice_count']}",
-            f"  Total invoiced: {result['total_invoiced']:.2f}",
-            f"  Total paid: {result['total_paid']:.2f}",
-            f"  Outstanding balance: {result['outstanding_balance']:.2f}",
-        ]
-        if result["anomalies"]:
-            lines.append("  Anomalies:")
-            lines.extend(f"    - {a}" for a in result["anomalies"])
-        else:
-            lines.append("  Anomalies: none")
-        return "\n".join(lines)
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(["field", "value"])
+        writer.writerow(["account_id", result["account_id"]])
+        writer.writerow(["invoice_count", result["invoice_count"]])
+        writer.writerow(["total_invoiced", f"{result['total_invoiced']:.2f}"])
+        writer.writerow(["total_paid", f"{result['total_paid']:.2f}"])
+        writer.writerow(["outstanding_balance", f"{result['outstanding_balance']:.2f}"])
+        for anomaly in result["anomalies"]:
+            writer.writerow(["anomaly", anomaly])
+        return buf.getvalue()

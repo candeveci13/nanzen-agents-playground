@@ -22,7 +22,9 @@ wrong.
    adjustment) — matching what the report should say, not just "sum
    invoices." — **done, folded into step 2's prompt update**
 4. Re-run `make run ARGS="--task billing_summary"`, check the generated PDF's
-   numbers against the reconciliation by hand.
+   numbers against the reconciliation by hand. — **done, see
+   `logs/2026-08-30.md`** (took 2 fixes along the way: the prompt's
+   late-payment ask and the reconciliation tool's output format)
 5. Add/adjust a test asserting the reconciliation produces the correct
    deduplicated total for MERID-001 (guards against regressing to the naive
    sum).
