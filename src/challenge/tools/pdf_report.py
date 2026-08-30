@@ -36,6 +36,8 @@ def build_pdf(
             "title": "...", "labels": [...],
             "datasets": [{"label": "...", "data": [...]}]}
     """
+    from xml.sax.saxutils import escape
+
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -69,6 +71,15 @@ def build_pdf(
     body_style = ParagraphStyle(
         "DocBody", parent=styles["Normal"], fontSize=10, leading=14, spaceAfter=8
     )
+    table_header_style = ParagraphStyle(
+        "TableHeader",
+        parent=styles["Normal"],
+        fontSize=9,
+        leading=11,
+        textColor=colors.white,
+        fontName="Helvetica-Bold",
+    )
+    table_cell_style = ParagraphStyle("TableCell", parent=styles["Normal"], fontSize=8, leading=10)
 
     story: list[Any] = [Paragraph(title, title_style), Spacer(1, 12)]
 
@@ -84,18 +95,30 @@ def build_pdf(
         elif section_type == "table":
             headers = section.get("headers", [])
             rows = section.get("rows", [])
-            table_data = [headers, *rows] if headers else rows
-            if table_data:
-                t = Table(table_data, repeatRows=1)
+            num_cols = len(headers) if headers else (len(rows[0]) if rows else 0)
+
+            if num_cols:
+
+                def cell(value: Any, style: ParagraphStyle) -> Paragraph:
+                    text = escape(str(value)) if value is not None else ""
+                    return Paragraph(text, style)
+
+                table_data = []
+                if headers:
+                    table_data.append([cell(h, table_header_style) for h in headers])
+                for row in rows:
+                    table_data.append([cell(v, table_cell_style) for v in row])
+
+                col_width = doc.width / num_cols
+                t = Table(
+                    table_data, colWidths=[col_width] * num_cols, repeatRows=1 if headers else 0
+                )
                 t.setStyle(
                     TableStyle(
                         [
                             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
-                            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                            ("FONTSIZE", (0, 0), (-1, 0), 9),
-                            ("FONTSIZE", (0, 1), (-1, -1), 8),
                             ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                            ("VALIGN", (0, 0), (-1, -1), "TOP"),
                             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
                             (
                                 "ROWBACKGROUNDS",
