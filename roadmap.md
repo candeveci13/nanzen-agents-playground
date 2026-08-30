@@ -15,12 +15,12 @@ wrong.
 2. Wire that into the billing summary — either as a small helper the agent's
    prompt tells it to use, or as a preprocessing step before the agent sees
    the data — so `read_context` on `billing` doesn't hand back a raw event
-   stream for the agent to sum by hand.
+   stream for the agent to sum by hand. — **done, see `logs/2026-08-30.md`**
 3. Update the `billing_summary` task prompt/instructions to ask for: total
    invoiced (canonical, deduplicated), total paid, outstanding balance, and a
    called-out list of anomalies (the reissued invoice, the undocumented
    adjustment) — matching what the report should say, not just "sum
-   invoices."
+   invoices." — **done, folded into step 2's prompt update**
 4. Re-run `make run ARGS="--task billing_summary"`, check the generated PDF's
    numbers against the reconciliation by hand.
 5. Add/adjust a test asserting the reconciliation produces the correct

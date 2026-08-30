@@ -9,19 +9,31 @@ Each task is a dict with:
 Add your own tasks below or modify the existing ones.
 """
 
+from challenge.tools import BillingReconciliationTool
+
 TASKS: list[dict] = [
     {
         "name": "billing_summary",
         "agent_name": "BillingAnalyst",
         "role": "Billing and payment analysis specialist",
+        "tools": [BillingReconciliationTool()],
         "prompt": (
             "Analyze the billing history for account MERID-001 (Meridian Health).\n"
-            "1. Read the billing data and summarize total invoiced vs total paid.\n"
-            "2. Identify any late payments or outstanding invoices.\n"
-            "3. Create a PDF report called 'billing_summary_merid001.pdf' with:\n"
-            "   - A summary paragraph of the billing relationship\n"
+            "1. Call `reconcile_billing` for MERID-001 to get the authoritative "
+            "total invoiced, total paid, and outstanding balance. The raw "
+            "`read_context('billing')` event log has more than one invoice_issued "
+            "row for some invoices and represents credit notes in multiple places — "
+            "do not hand-sum raw rows for the totals, use `reconcile_billing`.\n"
+            "2. Use `read_context('billing')` for supporting detail: individual "
+            "invoice statuses, due/paid dates, late payments.\n"
+            "3. Identify any late payments or outstanding invoices.\n"
+            "4. Create a PDF report called 'billing_summary_merid001.pdf' with:\n"
+            "   - A summary paragraph of the billing relationship, using the "
+            "reconciled total invoiced / total paid / outstanding balance\n"
             "   - A table of all invoices with their status and amounts\n"
-            "   - Any notable findings (disputes, credits, late payments)"
+            "   - A findings section listing the anomalies `reconcile_billing` "
+            "returned (reissued invoices, credit notes, undocumented adjustments) "
+            "plus any late payments or disputes you notice in the raw log"
         ),
     },
     {
