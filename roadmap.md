@@ -11,7 +11,7 @@ wrong.
    canonicalize to one row per `invoice_id` (latest `invoice_issued` wins,
    carry a flag when more than one exists), net credits exactly once, and
    separately surface un-applied/undocumented adjustments instead of folding
-   them into a total.
+   them into a total. — **done, see `logs/2026-08-30.md`**
 2. Wire that into the billing summary — either as a small helper the agent's
    prompt tells it to use, or as a preprocessing step before the agent sees
    the data — so `read_context` on `billing` doesn't hand back a raw event
