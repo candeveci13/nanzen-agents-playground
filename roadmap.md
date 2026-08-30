@@ -27,7 +27,7 @@ wrong.
    late-payment ask and the reconciliation tool's output format)
 5. Add/adjust a test asserting the reconciliation produces the correct
    deduplicated total for MERID-001 (guards against regressing to the naive
-   sum).
+   sum). — **done, see `logs/2026-08-30.md`** — all 5 plan items complete.
 
 ## Left alone on purpose
 
